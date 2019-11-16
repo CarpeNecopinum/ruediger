@@ -1,0 +1,35 @@
+html
+    head
+        title "Rüdiger Home Automation Login"
+        style(type="text/css").
+            body {
+                background-image: url("https://placekitten.com/1024/768");
+                background-size: cover;
+            }
+            #loginform {
+                width: 200px;
+                margin: 100px auto;
+                background-color: rgba(0,0,0,0.5);
+                padding: 50px;
+                color: white;
+                font-family: sans-serif;
+            }
+            form * {
+                display: block;
+                width: 100%;
+                margin-top: 10px;
+            }
+            form button {
+                width: 100px;
+                margin: 10px auto;
+                border: 2px solid white;
+                background-color: black;
+                color: white;
+            }
+    body
+        div#loginform
+            form(method="post")
+                label(for="pw") Passwort
+                input#pw(type="password" name="pw")
+                button Einloggen
+                    

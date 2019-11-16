@@ -1,0 +1,11 @@
+[Unit]
+Description=Server talking to google home automation
+After=network.target auditd.service
+
+[Service]
+Type=simple
+ExecStart=/home/pi/HomeCloud/run.sh
+User=pi
+
+[Install]
+WantedBy=multi-user.target
