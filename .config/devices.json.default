@@ -1,0 +1,27 @@
+{
+    "brennenstuhl_plug": {
+        "name": "Smartplug",
+        "code_on": "12345678",
+        "code_of": "87654321",
+        "protocol": 4,
+        "ghome": {
+            "type": "action.devices.types.OUTLET",
+            "traits": [
+                "action.devices.traits.OnOff"
+            ]
+        }
+    },
+    "kwmobile_fassung": {
+        "name": "Smartsocket",
+        "code_on": "112345678",
+        "code_off": "187654321",
+        "protocol": 1,
+        "pulselength": 200,
+        "ghome": {
+            "type": "action.devices.types.LIGHT",
+            "traits": [
+                "action.devices.traits.OnOff"
+            ]
+        }
+    }
+}

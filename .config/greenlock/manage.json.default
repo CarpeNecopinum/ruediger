@@ -1,0 +1,9 @@
+{
+    "subscriberEmail": "ruedigermail@example.com",
+    "agreeToTerms": true,
+    "sites": {
+        "ruediger.example.com" : {
+            "subject": "ruediger.example.com"
+        }
+    }
+}
