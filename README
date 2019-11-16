@@ -1,0 +1,7 @@
+# Allowing the server to open ports 80 and 443 as non-root:
+
+`sudo setcap 'cap_net_bind_service=+ep' $(which node)`
+
+# Setup as a systemd service:
+
+Modify `ruediger.service` and copy it to `/etc/systemd/system/`. Then enable the service with `systemctl enable ruediger` and start it with `systemctl start ruediger`.
