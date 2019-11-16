@@ -1,2 +1,5 @@
 node_modules
 allowed_codes.json
+.config/auth.json
+.config/devices.json
+.config/greenlock/manage.json
