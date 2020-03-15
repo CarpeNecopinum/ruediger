@@ -6,12 +6,11 @@ const allowed_codes = (() => {
 		catch (e) { return []; }})()
 
 // Dependencies
-const express = require('express');
-const bodyParser = require('body-parser');
-const util = require('util');
-const exec = util.promisify(require('child_process').exec);
+const express = require('express')
+const bodyParser = require('body-parser')
+const fs = require('fs')
 const { scryptSync, randomBytes } = require('crypto')
-const { Mutex } = require('async-mutex')
+const { smarthome } = require('actions-on-google');
 
 // Build up app
 const app = express();
@@ -19,17 +18,19 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set('view engine', 'pug')
 
-const {smarthome} = require('actions-on-google');
+const actors = (() => {
+	let names = new Set()
+	for (id in devices) names.add(devices[id].actor)
+	let result = {}
+	for (name of names.values()) {
+		console.log("Loading actor " + name + " ...")
+		let klass = require('./actors/' + name + ".js")
+		result[name] = new klass()
+	}
+	return result;
+})();
 
 const hash = (pw) => scryptSync(pw, "", 16).toString("hex")
-
-const sendCode = (() => {
-	const mutex = new Mutex()
-	return function(code, protocol, pulselength) {
-		pulselength = pulselength || ""
-		mutex.runExclusive(() => exec(`codesend ${code} ${protocol} ${pulselength}`))
-	}
-})();
 
 function checkToken(header)
 {
@@ -86,24 +87,14 @@ app.all("/token", (request, response) => {
 home = smarthome({debug: false})
 
 home.onSync((body, headers) => {
-	console.log(headers)
+	console.log("onSync requested")
 	if (!checkToken(headers)) return auth_fail(body.requestId)
 
     let devices_reply = []
     for (id in devices) {
         let device = devices[id]
-        devices_reply.push(Object.assign(
-			{},
-			{
-	            id: id,
-	            name: {
-	                defaultNames: [device.name],
-	                name: device.name,
-	                nicknames: [device.name]
-	            },
-	            willReportState: true
-	        },
-			device.ghome))
+		let actor = actors[device.actor]
+		devices_reply.push(actor.sync(device))
     }
     console.log(`Sync: ${devices_reply.length} devices sent`)
     return {
@@ -127,10 +118,10 @@ home.onQuery((body, headers) => {
     const intent = body.inputs[0];
     for (const device of intent.payload.devices)
     {
+		let dev = devices[device.id]
+		let actor = actors[dev.actor]
         console.log(`Status of ${device.id} queried`)
-        payload.devices[device.id] = {
-            on: devices[device.id]["on"] || false
-        };
+		payload.devices[device.id] = actor.query(dev)
     }
     return {
         requestId: requestId,
@@ -160,21 +151,9 @@ home.onExecute(async (body, headers) => {
         {
             for (device of command.devices)
             {
-                for (exe of command.execution)
-                {
-                    if (exe.command === "action.devices.commands.OnOff") {
-						let dev = devices[device.id]
-                        if (exe.params.on == true) {
-                            console.log(`Command: turn on ${device.id}`)
-                            dev["on"] = true
-                            sendCode(dev.code_on, dev.protocol, dev.pulselength)
-                        } else {
-                            console.log(`Command: turn off ${device.id}`)
-                            dev["on"] = false
-                            sendCode(dev.code_off, dev.protocol, dev.pulselength)
-                        }
-                    }
-                }
+				let dev = devices[device.id]
+				let actor = actors[dev.actor]
+				actor.execute(command.execution, dev)
             }
         }
     }
