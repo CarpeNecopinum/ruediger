@@ -135,7 +135,7 @@ home.onExecute(async (body, headers) => {
     const {requestId} = body;
     // Execution results are grouped by status
     const result = {
-        ids: [requestId],
+        ids: [],
         status: 'SUCCESS',
         states: {
             online: true,
@@ -154,6 +154,7 @@ home.onExecute(async (body, headers) => {
 				let dev = devices[device.id]
 				let actor = actors[dev.actor]
 				actor.execute(command.execution, dev)
+				result.ids.push(device.id)
             }
         }
     }

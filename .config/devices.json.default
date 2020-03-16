@@ -13,5 +13,11 @@
         "protocol": 1,
         "pulselength": 200,
         "type": "action.devices.types.LIGHT"
+    },
+    "computer": {
+        "name": "Computer",
+        "actor": "Computer",
+        "linux_host": "example.local",
+        "mac_addr": "12:34:56:78:9a:bc"
     }
 }
