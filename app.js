@@ -18,6 +18,10 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set('view engine', 'pug')
 
+const localApi = express();
+localApi.use(bodyParser.json());
+localApi.get('/', (req, res) => res.send("<h1>Ruediger Local API</h1>"))
+
 const actors = (() => {
 	let names = new Set()
 	for (id in devices) names.add(devices[id].actor)
@@ -175,4 +179,7 @@ home.onDisconnect((body) => {
 
 app.use("/smarthome", home)
 
-module.exports = app
+module.exports = {
+	external: app,
+	local: localApi
+}
