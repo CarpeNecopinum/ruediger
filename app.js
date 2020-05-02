@@ -90,10 +90,7 @@ app.all("/token", (request, response) => {
 
 home = smarthome({debug: false})
 
-home.onSync((body, headers) => {
-	console.log("onSync requested")
-	if (!checkToken(headers)) return auth_fail(body.requestId)
-
+function syncResponse(requestId) {
     let devices_reply = []
     for (id in devices) {
         let device = devices[id]
@@ -102,18 +99,25 @@ home.onSync((body, headers) => {
     }
     console.log(`Sync: ${devices_reply.length} devices sent`)
     return {
-        requestId: body.requestId,
+        requestId: requestId,
         payload: {
             agentUserId: '123',
             devices: devices_reply,
         },
     };
+}
+
+home.onSync((body, headers) => {
+	console.log("onSync requested")
+	if (!checkToken(headers)) return auth_fail(body.requestId)
+	return syncResponse(body.requestId)
 })
 
+localApi.post('/sync', (req, res) => res.json(syncResponse(req.body.requestId)))
 
-home.onQuery((body, headers) => {
-	if (!checkToken(headers)) return auth_fail(body.requestId)
 
+function queryResponse(body) {
+	//console.log(JSON.stringify(body, undefined, 4))
     const {requestId} = body;
     const payload = {
         devices: {},
@@ -131,11 +135,17 @@ home.onQuery((body, headers) => {
         requestId: requestId,
         payload: payload,
     };
+}
+
+home.onQuery((body, headers) => {
+	if (!checkToken(headers)) return auth_fail(body.requestId)
+	return queryResponse(body);
 });
 
-home.onExecute(async (body, headers) => {
-	if (!checkToken(headers)) return auth_fail(body.requestId)
+localApi.post('/query', (req, res) => res.json(queryResponse(req.body)))
 
+
+async function handleExecute(body) {
     const {requestId} = body;
     // Execution results are grouped by status
     const result = {
@@ -169,7 +179,25 @@ home.onExecute(async (body, headers) => {
             commands: [result],
         },
     };
+}
+
+home.onExecute(async (body, headers) => {
+	if (!checkToken(headers)) return auth_fail(body.requestId)
+	return await handleExecute(body);
 });
+
+localApi.post('/execute', async (req, res) => res.json(await handleExecute(req.body)))
+
+localApi.post('/settings', async (req, res) => {
+	await fs.promises.writeFile('settings.json', JSON.stringify(req.body));
+})
+
+localApi.get('/settings', async (req, res) => {
+	let state = await fs.promises.readFile('settings.json')
+	res.json(JSON.parse(state))
+})
+
+
 
 home.onDisconnect((body) => {
 	console.log("Disconnect:")
